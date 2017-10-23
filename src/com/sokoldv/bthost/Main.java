@@ -1,10 +1,16 @@
 package com.sokoldv.bthost;
 
-import com.intel.bluetooth.btspp.Connection;
-
-import javax.bluetooth.*;
 import java.io.IOException;
 import java.util.Scanner;
+
+import javax.bluetooth.BluetoothStateException;
+import javax.bluetooth.DataElement;
+import javax.bluetooth.DeviceClass;
+import javax.bluetooth.DiscoveryAgent;
+import javax.bluetooth.DiscoveryListener;
+import javax.bluetooth.LocalDevice;
+import javax.bluetooth.RemoteDevice;
+import javax.bluetooth.ServiceRecord;
 import javax.bluetooth.UUID;
 import javax.microedition.io.Connector;
 
@@ -83,7 +89,7 @@ public class Main {
         int paired = 0;
         RemoteDevice[] devices = localDevice.getDiscoveryAgent().retrieveDevices(paired);
         System.out.println("Devices:");
-        for (int i = 0; i < devices.length; i++) {
+        if (devices != null) for (int i = 0; i < devices.length; i++) {
             try {
                 System.out.println(String.format("%d - %s (%s)", i, devices[i].getFriendlyName(false), devices[i].getBluetoothAddress()));
             } catch (IOException e) {
@@ -113,7 +119,7 @@ public class Main {
         int[] attrSet = new int[20];
         UUID[] uuids = new UUID[] {
 //                new UUID("0001", true), // SDP
-                new UUID("0003", true), // RFCOMM
+//                new UUID("0003", true), // RFCOMM
 //                new UUID("0008", true), // OBEX
 //                new UUID("000C", true), // HTTP
 //                new UUID("0100", true), // L2CAP
@@ -121,12 +127,13 @@ public class Main {
 //                new UUID("0111", true),  // Serial Port
 //                new UUID("1108", true), // headset a2dp
 //                new UUID("1112", true), // headset hsp
-//                new UUID("7f07d980-0c8b-4a13-a087-223c0f5e6109", false)
+                new UUID("7f07d9800c8b4a13a087223c0f5e6109", false)
         };
         try {
             localDevice.getDiscoveryAgent().searchServices(null, uuids, device, new MyDiscoveryListener());
             busy = true;
         } catch (BluetoothStateException e) {
+            System.out.println(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -150,6 +157,16 @@ public class Main {
         System.out.println("services, sr\tlist discoverable services\n");
         System.out.println("exit");
         System.out.println("======================================\n");
+    }
+
+    private static void test (){
+        String address = "38:D5:47:A8:70:26";
+
+        try {
+            Connector.open("btspp://38D547A87026;2");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 //    static DiscoveryListener discoveryListener = new MyDiscoveryListener;

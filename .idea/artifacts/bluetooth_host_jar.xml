@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="bluetooth_host:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/bluetooth_host_jar</output-path>
+    <root id="archive" name="bluetooth_host.jar">
+      <element id="module-output" name="bluetooth_host" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/bluecove-2.1.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
