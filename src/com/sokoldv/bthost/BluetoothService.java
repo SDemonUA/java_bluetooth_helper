@@ -1,13 +1,22 @@
 package com.sokoldv.bthost;
 
-import javax.bluetooth.*;
-import javax.microedition.io.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
+import javax.bluetooth.BluetoothStateException;
+import javax.bluetooth.DataElement;
+import javax.bluetooth.DiscoveryAgent;
+import javax.bluetooth.LocalDevice;
+import javax.bluetooth.ServiceRecord;
+import javax.bluetooth.UUID;
+import javax.microedition.io.Connector;
+import javax.microedition.io.StreamConnection;
+import javax.microedition.io.StreamConnectionNotifier;
+
 public class BluetoothService extends Thread {
     private final UUID uuid;
+    private ServiceRecord serviceRecord;
 
     BluetoothService(UUID uuid){
         this.uuid = uuid;
@@ -23,34 +32,35 @@ public class BluetoothService extends Thread {
             return;
         }
 
-        String connection_url = String.format("btspp://localhost:3;",
-                lc.getBluetoothAddress());
-
         try {
             lc.setDiscoverable(DiscoveryAgent.GIAC);
         } catch (BluetoothStateException e) {
             e.printStackTrace();
         }
 
-        ServiceRecord serviceRecord;
-        Connection connection;
+        StreamConnectionNotifier connection;
         try {
-            connection = Connector.open(connection_url);
+            connection = (StreamConnectionNotifier) Connector.open(String.format("btspp://localhost:%s;name=Test", uuid.toString()));
             serviceRecord = lc.getRecord(connection);
             setAttributes(serviceRecord);
+            lc.updateRecord(serviceRecord);
+            System.out.println(
+                    String.format("Connection created : %s", uuid.toString())
+            );
+
         } catch (IOException e) {
+            System.out.println(e.getMessage());
             e.printStackTrace();
             return;
         }
 
         StreamConnection sc;
         try {
-            sc = ((StreamConnectionNotifier) connection).acceptAndOpen();
+            sc = connection.acceptAndOpen();
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
-
 
         InputStream in;
         try {
@@ -75,7 +85,8 @@ public class BluetoothService extends Thread {
     }
 
     private void setAttributes(ServiceRecord sr) {
-//        DataElement name = new DataElement(DataElement.STRING, "Test Server");
-//        sr.setAttributeValue(0b0000, name);
+        DataElement name = new DataElement(DataElement.STRING, "Test Server");
+
+        sr.setAttributeValue(0x0003, new DataElement(DataElement.UUID, uuid));
     }
 }

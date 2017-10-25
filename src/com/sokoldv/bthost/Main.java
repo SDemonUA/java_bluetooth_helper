@@ -1,10 +1,16 @@
 package com.sokoldv.bthost;
 
-import com.intel.bluetooth.btspp.Connection;
-
-import javax.bluetooth.*;
 import java.io.IOException;
 import java.util.Scanner;
+
+import javax.bluetooth.BluetoothStateException;
+import javax.bluetooth.DataElement;
+import javax.bluetooth.DeviceClass;
+import javax.bluetooth.DiscoveryAgent;
+import javax.bluetooth.DiscoveryListener;
+import javax.bluetooth.LocalDevice;
+import javax.bluetooth.RemoteDevice;
+import javax.bluetooth.ServiceRecord;
 import javax.bluetooth.UUID;
 import javax.microedition.io.Connector;
 
