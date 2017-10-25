@@ -1,16 +1,10 @@
 package com.sokoldv.bthost;
 
+import com.intel.bluetooth.btspp.Connection;
+
+import javax.bluetooth.*;
 import java.io.IOException;
 import java.util.Scanner;
-
-import javax.bluetooth.BluetoothStateException;
-import javax.bluetooth.DataElement;
-import javax.bluetooth.DeviceClass;
-import javax.bluetooth.DiscoveryAgent;
-import javax.bluetooth.DiscoveryListener;
-import javax.bluetooth.LocalDevice;
-import javax.bluetooth.RemoteDevice;
-import javax.bluetooth.ServiceRecord;
 import javax.bluetooth.UUID;
 import javax.microedition.io.Connector;
 
@@ -29,14 +23,7 @@ public class Main {
 
         localInfo();
 
-//        try {
-//            javax.microedition.io.Connection conn = Connector.open("btspp://0B89608E421F:2;authenticate=false;encrypt=false;master=true");
-//
-//
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        new BluetoothService(new UUID("7f07d9800c8b4a13a087223c0f5e6109", false)).start();
 
         System.out.print("> ");
         sc = new Scanner(System.in);
