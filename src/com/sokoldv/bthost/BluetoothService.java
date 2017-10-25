@@ -45,7 +45,7 @@ public class BluetoothService extends Thread {
             setAttributes(serviceRecord);
             lc.updateRecord(serviceRecord);
             System.out.println(
-                    String.format("Connection created : %s", uuid.toString())
+                    String.format("Connection created : %s", serviceRecord.getConnectionURL(ServiceRecord.AUTHENTICATE_ENCRYPT, false))
             );
 
         } catch (IOException e) {
@@ -85,8 +85,16 @@ public class BluetoothService extends Thread {
     }
 
     private void setAttributes(ServiceRecord sr) {
-        DataElement name = new DataElement(DataElement.STRING, "Test Server");
+        // Service name
+//        sr.setAttributeValue(0x0000, new DataElement(DataElement.STRING, "Test GATT Server"));
 
+        // Service ID List
+        DataElement serviceList = new DataElement(DataElement.DATSEQ);
+        serviceList.addElement(new DataElement(DataElement.UUID, uuid));
+        sr.setAttributeValue(0x0001, serviceList);
+
+        // Service ID
         sr.setAttributeValue(0x0003, new DataElement(DataElement.UUID, uuid));
+
     }
 }
