@@ -1,5 +1,6 @@
 package com.sokoldv.bthost;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -13,13 +14,14 @@ import javax.bluetooth.RemoteDevice;
 import javax.bluetooth.ServiceRecord;
 import javax.bluetooth.UUID;
 import javax.microedition.io.Connector;
+import javax.microedition.io.StreamConnection;
 
 public class Main {
     static LocalDevice localDevice = null;
     static Scanner sc = null;
     static boolean busy = false;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         try {
             localDevice = LocalDevice.getLocalDevice();
         } catch (BluetoothStateException e) {
@@ -29,7 +31,31 @@ public class Main {
 
         localInfo();
 
-        new BluetoothService(new UUID("7f07d9800c8b4a13a087223c0f5e6109", false)).start();
+        //connect to the server and send a line of text
+        StreamConnection streamConnection=(StreamConnection)Connector.open("btspp://38D547A87026:9;authenticate=true;encrypt=true;master=false");
+        //send string
+        try{
+            DataOutputStream outputStream = streamConnection.openDataOutputStream();
+            outputStream.writeByte(3);
+            outputStream.writeByte(33);
+            outputStream.writeByte(2);
+            outputStream.flush();
+
+
+            //read response
+//            InputStream inStream=streamConnection.openInputStream();
+//
+//            BufferedReader bReader2=new BufferedReader(new InputStreamReader(inStream));
+//            String lineRead=bReader2.readLine();
+//            System.out.println(lineRead);
+
+            Scanner sc = new Scanner(System.in);
+            sc.next();
+            System.exit(0);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+//        new BluetoothService(new UUID("7f07d9800c8b4a13a087223c0f5e6109", false)).start();
 
         System.out.print("> ");
         sc = new Scanner(System.in);
@@ -54,6 +80,9 @@ public class Main {
                 case "services":
                     listServices();
                     break;
+                case "test":
+                    connectToPhone();
+                    break;
                 case "exit":
                     return;
             }
@@ -68,6 +97,39 @@ public class Main {
 
             System.out.print("> ");
         }
+    }
+
+    private static void connectToPhone() {
+        int paired = 0;
+        RemoteDevice[] devices = localDevice.getDiscoveryAgent().retrieveDevices(DiscoveryAgent.PREKNOWN);
+        System.out.println("Devices:");
+        if (devices != null) for (int i = 0; i < devices.length; i++) {
+            System.out.print(i+": ");
+            System.out.println(BTDevice.describe(devices[i]));
+        }
+
+        System.out.print("Select device: \r");
+
+        RemoteDevice device = null;
+        try {
+            int option = sc.nextInt();
+            if (devices.length-1 >= option)
+                device = devices[option];
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+
+        if (device == null) return;
+        try {
+            System.out.println(String.format("%s selected", device.getFriendlyName(true)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String address = device.getBluetoothAddress();
+        System.out.println(address);
+        return;
     }
 
     private static void localInfo() {
@@ -120,7 +182,7 @@ public class Main {
 //                new UUID("0111", true),  // Serial Port
 //                new UUID("1108", true), // headset a2dp
 //                new UUID("1112", true), // headset hsp
-                new UUID("7f07d9800c8b4a13a087223c0f5e6109", false)
+                new UUID("7f07d9800c8b4a13a087223c0f5e6110", false)
         };
         try {
             localDevice.getDiscoveryAgent().searchServices(null, uuids, device, new MyDiscoveryListener());
@@ -201,4 +263,18 @@ public class Main {
             busy = false;
         }
     };
+}
+
+
+class BTDevice{
+    static String describe(RemoteDevice device){
+        String descr = null;
+        try {
+            descr = String.format("%s (%s)", device.getFriendlyName(false), device.getBluetoothAddress());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return descr;
+    }
 }
