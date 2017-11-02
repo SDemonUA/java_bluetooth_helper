@@ -4,6 +4,9 @@
     <root id="archive" name="bluetooth_host.jar">
       <element id="module-output" name="bluetooth_host" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/bluecove-2.1.1.jar" path-in-jar="/" />
+      <element id="directory" name="assets">
+        <element id="dir-copy" path="$PROJECT_DIR$/assets" />
+      </element>
     </root>
   </artifact>
 </component>

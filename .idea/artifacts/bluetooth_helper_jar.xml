@@ -1,9 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="bluetooth_helper:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/bluetooth_helper_jar</output-path>
-    <root id="archive" name="bluetooth_helper.jar">
-      <element id="module-output" name="bluetooth_helper" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/bluecove-2.1.1.jar" path-in-jar="/" />
-    </root>
-  </artifact>
-</component>
