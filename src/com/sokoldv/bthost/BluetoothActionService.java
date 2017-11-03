@@ -15,6 +15,7 @@ import javax.bluetooth.ServiceRecord;
 import javax.bluetooth.UUID;
 import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
+import javax.swing.*;
 
 /**
  * Created by UnetDeveloper on 02.11.2017.
@@ -32,7 +33,6 @@ class BluetoothActionService implements DiscoveryListener {
     private final StreamConnection connection;
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
-
 
 //    private final Thread pingThread;
 
