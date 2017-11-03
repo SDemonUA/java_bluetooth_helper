@@ -1,19 +1,45 @@
 package com.sokoldv.bthost;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Vector;
 
-import javax.bluetooth.*;
-import javax.swing.*;
+import javax.bluetooth.BluetoothStateException;
+import javax.bluetooth.DeviceClass;
+import javax.bluetooth.DiscoveryAgent;
+import javax.bluetooth.DiscoveryListener;
+import javax.bluetooth.LocalDevice;
+import javax.bluetooth.RemoteDevice;
+import javax.bluetooth.ServiceRecord;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 public class ActionManager {
     private static BluetoothActionService bluetoothActionService;
+    private static Window window;
 
     static JButton[] buttons = new JButton[3];
     static String[] icons = new String[]{ "flash", "vibrate", "photo" };
@@ -22,18 +48,18 @@ public class ActionManager {
     static int[] borderColors = new int[]{ 0xc9def3, 0xc9ead1, 0xfbd2d0 };
 
     public static void main(String[] args) throws IOException {
-        Window window = new Window();
-        window.setButtonClickListener((event, button, id) -> bluetoothActionService.setAction(id, window::focusButton));
+        window = new Window();
+        window.setButtonClickListener((event, button, id) -> {
+            if (bluetoothActionService != null)
+                bluetoothActionService.setAction(id, window::focusButton);
+        });
 
         for (int i = 0; i < actions.length; i++) {
             window.addButton(actions[i], icons[i], titles[i], borderColors[i]);
         }
 
         window.showWindow();
-
-        RemoteDevice device = selectDeviceToConnectTo(window);
-
-
+        setUpBluetoothService();
 
 //        bluetoothActionService = new BluetoothActionService();
 //
@@ -64,6 +90,20 @@ public class ActionManager {
 //        }).start();
     }
 
+    private static void setUpBluetoothService(){
+        RemoteDevice device = selectDeviceToConnectTo(window);
+        try {
+            bluetoothActionService = new BluetoothActionService(device);
+            bluetoothActionService.setOnDisconnectListener(ActionManager::setUpBluetoothService);
+            bluetoothActionService.setOnActionChangeListener(newAction -> {
+                System.out.println("Actuin change listener: "+newAction);
+                window.focusButton(newAction);
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static RemoteDevice selectDeviceToConnectTo(Window window) {
         JDialog dialog = new JDialog(window, "Select Device", true);
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -89,7 +129,7 @@ public class ActionManager {
         new Thread(() -> {
             BTUtils.getDevices(devices -> {
                 if (devices == null) {
-                    System.out.println("No devices found!");
+                    System.out.println("No visible_devices found!");
                     System.exit(0);
                 }
 
@@ -109,7 +149,7 @@ public class ActionManager {
                     JButton option = new JButton();
                     String name = "????";
                     try {
-                        name = device.getFriendlyName(true);
+                        name = device.getFriendlyName(false);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -255,12 +295,12 @@ class Window extends JFrame {
 
 class BTUtils {
     static private final Object lock = new Object();
-    static private Vector<RemoteDevice> devices;
+    static private HashMap<String, RemoteDevice> visible_devices;
 
     static private DiscoveryListener discoveryListener = new DiscoveryListener() {
         @Override
         public void deviceDiscovered(RemoteDevice btDevice, DeviceClass cod) {
-            devices.add(btDevice);
+            visible_devices.put(btDevice.getBluetoothAddress(), btDevice);
         }
 
         @Override
@@ -297,8 +337,15 @@ class BTUtils {
 
         DiscoveryAgent agent = localDevice.getDiscoveryAgent();
 
+        visible_devices = new HashMap<>();
+        RemoteDevice[] cached = agent.retrieveDevices(DiscoveryAgent.CACHED);
+        if (cached != null){
+            for (RemoteDevice cached_device : cached) {
+                visible_devices.put(cached_device.getBluetoothAddress(), cached_device);
+            }
+        }
+
         try {
-            devices = new Vector<>();
             System.out.println("Inquiry started");
             agent.startInquiry(DiscoveryAgent.GIAC, discoveryListener);
         } catch (BluetoothStateException e) {
@@ -313,6 +360,6 @@ class BTUtils {
 
         System.out.println("Devices gotten");
 
-        callback.onGetDevices(devices.toArray(new RemoteDevice[0]));
+        callback.onGetDevices(visible_devices.values().toArray(new RemoteDevice[0]));
     }
 }
